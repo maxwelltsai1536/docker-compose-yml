@@ -1,0 +1,88 @@
+version: '3'
+name: mysql-cluster
+services:
+  mysql-master:
+    image: mysql:8.0.13
+    container_name: mysql-master
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MASTER_SYNC_USER: "sync_admin" #设置脚本中定义的用于同步的账号
+      MASTER_SYNC_PASSWORD: "123456" #设置脚本中定义的用于同步的密码
+      ADMIN_USER: "root" #当前容器用于拥有创建账号功能的数据库账号
+      ADMIN_PASSWORD: "123456"
+      ALLOW_HOST: "10.10.%.%" #允许同步账号的host地址
+      TZ: "Asia/Shanghai" #解决时区问题
+    restart: always
+    networks:
+      mysql:
+        ipv4_address: "10.10.10.10" #固定ip，因为从库在连接master的时候，需要设置host
+    volumes:
+      - /usr/mwt/mysql/master/config/master.cnf:/etc/my.cnf
+      - /usr/mwt/mysql/master/log:/var/log/mysql
+      - /usr/mwt/mysql/master/data:/var/lib/mysql
+    command:
+      -  "--lower_case_table_names=1"
+      -  "--server-id=1"
+      -  "--character-set-server=utf8mb4"
+      -  "--collation-server=utf8mb4_unicode_ci"
+      -  "--log-bin=mysql-bin"
+      -  "--sync_binlog=1"
+  mysql-slave1:
+    image: mysql:8.0.13
+    container_name: mysql-slave1
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      SLAVE_SYNC_USER: "sync_admin" #用于同步的账号，由master创建
+      SLAVE_SYNC_PASSWORD: "123456"
+      ADMIN_USER: "root"
+      ADMIN_PASSWORD: "123456"
+      MASTER_HOST: "10.10.10.10" #master地址，开启主从同步需要连接master
+      TZ: "Asia/Shanghai"
+    restart: always
+    networks:
+      - mysql
+    volumes:
+      - /usr/mwt/mysql/slave1/config/slave1.cnf:/etc/my.cnf
+      - /usr/mwt/mysql/slave1/log:/var/log/mysql
+      - /usr/mwt/mysql/slave1/data:/var/lib/mysql
+    command:
+      -  "--lower_case_table_names=1"
+      -  "--server-id=2"
+      -  "--character-set-server=utf8mb4"
+      -  "--collation-server=utf8mb4_unicode_ci"
+  mysql-slave2:
+    image: mysql:8.0.13
+    container_name: mysql-slave2
+    ports:
+      - 3308:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      SLAVE_SYNC_USER: "sync_admin"
+      SLAVE_SYNC_PASSWORD: "123456"
+      ADMIN_USER: "root"
+      ADMIN_PASSWORD: "123456"
+      MASTER_HOST: "10.10.10.10"
+      TZ: "Asia/Shanghai"
+    restart: always
+    networks:
+      - mysql
+    volumes:
+      - /usr/mwt/mysql/slave2/config/slave2.cnf:/etc/my.cnf
+      - /usr/mwt/mysql/slave2/log:/var/log/mysql
+      - /usr/mwt/mysql/slave2/data:/var/lib/mysql
+    command: #这里需要修改server-id，保证每个mysql容器的server-id都不一样
+      -  "--lower_case_table_names=1"
+      -  "--server-id=3"
+      -  "--character-set-server=utf8mb4"
+      -  "--collation-server=utf8mb4_unicode_ci"
+networks:
+  mysql:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.10.0.0/16"

@@ -1,0 +1,77 @@
+version: '3'
+services:
+  rmqserver01:
+    image: apache/rocketmq:5.1.0
+    container_name: rmqserver01
+    ports:
+      - 9876:9876
+    volumes:
+      - /usr/mwt/rocketmq/rmqserver01/logs:/home/rocketmq/logs
+      - /usr/mwt/rocketmq/rmqserver01/store:/home/rocketmq/store
+    #command: sh mqserver01
+    networks:
+      rocketmq:
+        ipv4_address: "20.10.1.1"
+  rmqserver02:
+    image: apache/rocketmq:5.1.0
+    container_name: rmqserver02
+    ports:
+      - 9877:9876
+    volumes:
+      - /usr/mwt/rocketmq/rmqserver02/logs:/home/rocketmq/logs
+      - /usr/mwt/rocketmq/rmqserver02/store:/home/rocketmq/store
+    #command: sh mqserver02
+    networks:
+      rocketmq:
+        ipv4_address: "20.10.1.2"
+  rmqbroker01:
+    image: apache/rocketmq:5.1.0
+    container_name: rmqbroker01
+    ports:
+      - 10911:10911
+    volumes:
+      - /usr/mwt/rocketmq/rmqbroker01/config/rmqbroker01.conf:/home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    environment:
+      TZ: Asia/Shanghai
+      NAMESRV_ADDR: "20.10.1.1:9876；20.10.1.2:9877"
+      JAVA_OPTS: " -Duser.home=/opt"
+      JAVA_OPT_EXT: "-server -Xms256m -Xmx256m -Xmn256m"
+    #command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    networks:
+      rocketmq:
+        ipv4_address: "20.10.2.1"
+  rmqbroker02:
+    image: apache/rocketmq:5.1.0
+    container_name: rmqbroker02
+    ports:
+      - 10912:10912
+    volumes:
+      - /usr/mwt/rocketmq/rmqbroker02/config/rmqbroker02.conf:/home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    environment:
+      TZ: Asia/Shanghai
+      NAMESRV_ADDR: "20.10.1.1:9876；20.10.1.2:9877"
+      JAVA_OPTS: " -Duser.home=/opt"
+      JAVA_OPT_EXT: "-server -Xms256m -Xmx256m -Xmn256m"
+    #command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    networks:
+      rocketmq:
+        ipv4_address: "20.10.2.2"
+  rmqdash:
+    image: apacherocketmq/rocketmq-dashboard
+    container_name: rmqdash
+    ports:
+      - 8087:8080
+    environment:
+      JAVA_OPTS: -D rocketmq.server.addr=20.10.1.1:9876;20.10.1.2:9877 -D com.rocketmq.sendMessageWithVIPChannel=false -D rocketmq.config.accessKey=rocketmq2 -D rocketmq.config.secretKey=12345678
+    volumes:
+      - /usr/mwt/rocketmq/rmqdash/data:/tmp/rocketmq-console/data
+    networks:
+      - rocketmq
+networks:
+  rocketmq:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "20.10.0.0/16"
+

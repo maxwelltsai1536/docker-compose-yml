@@ -1,0 +1,61 @@
+version: '3'
+name: consul-cluster
+services:
+  consul-server1:
+    image: consul:1.15.4
+    ports:
+      - 8501:8500
+    volumes: 
+      - /usr/mwt/consul/server1/config:/consul/config
+      - /usr/mwt/consul/server1/data:/consul/data
+    networks:
+      consul-network:
+        ipv4_address: 172.10.1.1
+    container_name: consul-server1
+    command: agent -server -node=server1 -bootstrap-expect=3 -bind=172.10.1.1 -client=0.0.0.0 -ui
+    restart: always
+  consul-server2:
+    image: consul:1.15.4
+    ports:
+      - 8502:8500
+    volumes: 
+      - /usr/mwt/consul/server2/config:/consul/config
+      - /usr/mwt/consul/server2/data:/consul/data
+    networks:
+      consul-network:
+        ipv4_address: 172.10.1.2
+    container_name: consul-server2
+    command: agent -server -node=server2 -bootstrap-expect=3 -bind=172.10.1.2 -retry-join=172.10.1.1 -client=0.0.0.0 -ui
+    restart: always
+  consul-server3:
+    image: consul:1.15.4
+    ports:
+      - 8503:8500
+    volumes: 
+      - /usr/mwt/consul/server3/config:/consul/config
+      - /usr/mwt/consul/server3/data:/consul/data
+    networks:
+      consul-network:
+        ipv4_address: 172.10.1.3
+    container_name: consul-server3
+    command: agent -server -node=server3 -bootstrap-expect=3 -bind=172.10.1.3 -retry-join=172.10.1.1 -client=0.0.0.0 -ui
+    restart: always
+  consul-client1:
+    image: consul:1.15.4
+    ports:
+      - 8500:8500
+    volumes: 
+      - /usr/mwt/consul/client1/config:/consul/config
+      - /usr/mwt/consul/client1/data:/consul/data
+    networks:
+      consul-network:
+        ipv4_address: 172.10.2.1
+    container_name: consul-client1
+    command: agent -node=client1 -bind=172.10.2.1 -retry-join=172.10.1.1 -client=0.0.0.0 -ui
+    restart: always
+networks:
+  consul-network:
+    ipam:
+      config:
+        - subnet: 172.10.0.0/16
+          gateway: 172.10.0.1
