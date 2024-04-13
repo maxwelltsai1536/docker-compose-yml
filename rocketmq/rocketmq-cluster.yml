@@ -9,6 +9,7 @@ services:
       - /usr/mwt/rocketmq/rmqserver01/logs:/home/rocketmq/rocketmq-5.1.0/logs
       - /usr/mwt/rocketmq/rmqserver01/store:/home/rocketmq/rocketmq-5.1.0/store
     command: sh mqnamesrv
+    restart: always
     networks:
       rocketmq:
         ipv4_address: "20.10.1.1"
@@ -21,6 +22,7 @@ services:
       - /usr/mwt/rocketmq/rmqserver02/logs:/home/rocketmq/rocketmq-5.1.0/logs
       - /usr/mwt/rocketmq/rmqserver02/store:/home/rocketmq/rocketmq-5.1.0/store
     command: sh mqnamesrv
+    restart: always
     networks:
       rocketmq:
         ipv4_address: "20.10.1.2"
@@ -37,6 +39,7 @@ services:
       JAVA_OPTS: " -Duser.home=/opt"
       JAVA_OPT_EXT: "-server -Xms256m -Xmx256m -Xmn256m"
     command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    restart: always
     networks:
       rocketmq:
         ipv4_address: "20.10.2.1"
@@ -53,6 +56,7 @@ services:
       JAVA_OPTS: " -Duser.home=/opt"
       JAVA_OPT_EXT: "-server -Xms256m -Xmx256m -Xmn256m"
     command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    restart: always
     networks:
       rocketmq:
         ipv4_address: "20.10.2.2"
@@ -65,6 +69,7 @@ services:
       JAVA_OPTS: -Drocketmq.namesrv.addr=20.10.1.1:9876;20.10.1.2:9877 -Dcom.rocketmq.sendMessageWithVIPChannel=false -Drocketmq.config.accessKey=rocketmq2 -Drocketmq.config.secretKey=12345678
     volumes:
       - /usr/mwt/rocketmq/rmqdash/data:/tmp/rocketmq-console/data
+    restart: always
     networks:
       rocketmq:
         ipv4_address: "20.10.1.10"
